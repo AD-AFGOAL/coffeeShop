@@ -53,7 +53,7 @@ def get_drinks():
 '''
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drinks_detail(permission, payload):
+def get_drinks_detail(jwt):
     drink_detail = Drink.query.all()
     drinks = [drink.long() for drink in drink_detail]
 
@@ -74,14 +74,14 @@ def get_drinks_detail(permission, payload):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/create', methods=['POST'])
+@app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def new_drink(permission, payload):
+def new_drink(jwt):
         body = request.get_json()
         title = body.get('title', None)
         recipe = body.get('recipe', None)
         try:
-            if recipe is None:
+            if  not recipe or not title:
                abort(422)
             recipe_drink = json.dumps(recipe)
             new_drink = Drink(title=title, recipe=recipe_drink)
@@ -89,7 +89,7 @@ def new_drink(permission, payload):
 
             return jsonify({
                 "success": True,
-                "created": [new_drink.long()]
+                "drinks": [new_drink.long()]
             })
         except:
             abort(422)
@@ -107,7 +107,7 @@ def new_drink(permission, payload):
 '''
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def update_drink(drink_id, permission, payload):
+def update_drink(jwt, drink_id):
     body = request.get_json()
     try:
         body = request.get_json()
@@ -147,9 +147,9 @@ def update_drink(drink_id, permission, payload):
 '''
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(drink_id, permission, payload):
+def delete_drink(jwt, drink_id):
         try:
-            drink = Drink.query.filter_by(id=drink_id).one_or_none()
+            drink = Drink.query.filter(Drink.id==drink_id).one_or_none()
             if drink is None:
                 abort(404)
             drink.delete()
@@ -236,7 +236,7 @@ def Not_found(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
-@app.errorhandler(422)
+@app.errorhandler(AuthError)
 def Auth_error(error):
     return jsonify({
         "success": False,

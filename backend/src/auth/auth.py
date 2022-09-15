@@ -5,9 +5,9 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'dev-ruquyduj.us.auth0.com'
+AUTH0_DOMAIN = 'dev-oen7zkm4.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'coffee'
+API_AUDIENCE = 'coffeeShop'
 
 ## AuthError Exception
 '''
@@ -169,11 +169,8 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            try:
-                payload = verify_decode_jwt(token)
-                check_permissions(permission, payload)
-            except:
-                abort(401)
-            return f(payload, *args, **kwargs) 
+            payload = verify_decode_jwt(token)
+            check_permissions(permission, payload)
+            return f(payload, *args, **kwargs)
         return wrapper
     return requires_auth_decorator
